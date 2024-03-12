@@ -1,9 +1,8 @@
 require('../../../config/dbconnect')
 const { Paper, RawPaper } = require('../model');
-const { translate } = require('../../utils/tencentcloud');
+const { translate } = require('../../../utils/tencentcloud');
 const { sleep } = require('../../../utils');
-const VDB = require('../../utils/vector')
-const fs = require('fs')
+const VDB = require('../../../utils/vector')
 
 function stripHtmlXmlTags(inputString) {
     const strippedString = inputString.replace(/<\/?[^>]+(>|$)/g, "");

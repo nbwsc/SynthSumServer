@@ -93,9 +93,9 @@ async function getPages() {
   return res
 }
 
-(async () => {
-  await launch();
-})();
+// (async () => {
+//   await launch();
+// })();
 
 module.exports = {
   getBrowser,

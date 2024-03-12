@@ -1,6 +1,5 @@
-const controller = require('./controller');
 const router = require('koa-router')();
-const spiderController = require('./spider/controller')
+const controller = require('./controller');
 const selectedController = require('./selectedcontroller')
 
 router.get('/', controller.index);
@@ -16,8 +15,6 @@ router.get('/exportExcel', controller.exportExcel)
 router.get('/exportSelectedExcel', selectedController.exportExcel)
 router.post('/exportExcel', controller.exportExcel)
 
-router.post('/spider/login', spiderController.login)
-router.post('/spider/detail', spiderController.detail)
 
 module.exports = router.routes();
 
