@@ -1,0 +1,2 @@
+// Test config
+module.exports = {};
