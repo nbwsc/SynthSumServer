@@ -1,7 +1,7 @@
 const COS = require('cos-nodejs-sdk-v5');
 const cos = new COS({
-    SecretId: 'AKIDT8ez50R40lW22lvhQxz2rVu7hurQm76F',
-    SecretKey: 'jEXfdLG7pRnunYeVu9H9mBa7RW1SBl7s',
+    SecretId: 'xxx',
+    SecretKey: 'xxx',
 });
 const Bucket = 'xxxxpublic-1253739015';
 const Region = 'ap-beijing';
