@@ -19,7 +19,7 @@ module.exports = {
     }
     const token = `${account._id}-${new Date().getTime()}`;
     try {
-      await redis.setEx(`FA:USER:${token}`, 172800, account._id);
+      await redis.setEx(`SynthSum:USER:${token}`, 172800, account._id);
     } catch (error) {
       console.error(error);
       return response.dbError(ctx, error);

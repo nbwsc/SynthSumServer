@@ -1,135 +1,61 @@
-require('../../../config/dbconnect')
+require('../../../config/dbconnect');
 const { Paper, RawPaper } = require('../model');
 const { translate } = require('../../../utils/tencentcloud');
 const { sleep } = require('../../../utils');
-const VDB = require('../../../utils/vector')
+const VDB = require('../../../utils/vector');
 
 function stripHtmlXmlTags(inputString) {
-    const strippedString = inputString.replace(/<\/?[^>]+(>|$)/g, "");
-    return strippedString;
+  const strippedString = inputString.replace(/<\/?[^>]+(>|$)/g, '');
+  return strippedString;
 }
 
 async function translatePaper() {
-    const filter = {
-        deleted: { $ne: true },
-        title: { $exists: false },
-        rawabstract: { $exists: true }
+  const filter = {
+    deleted: { $ne: true },
+    title: { $exists: false },
+    rawabstract: { $exists: true },
+  };
+  let papers = await Paper.find(filter).limit(10);
+  while (papers.length) {
+    // const restCount = await Paper.count(filter)
+    // console.log(`rest ${restCount} papers`)
+    for (let paper of papers) {
+      console.log(paper.rawtitle);
+      if (!paper.rawabstract) {
+        paper.deleted = true;
+        await paper.save();
+        continue;
+      }
+      paper.title = await translate(paper.rawtitle);
+      const strippedAbstract = stripHtmlXmlTags(paper.rawabstract);
+      const abstracts = splitText(strippedAbstract);
+      paper.abstract = '';
+      for (let abstract of abstracts) {
+        await sleep(500);
+        paper.abstract += await translate(abstract);
+      }
+      await paper.save();
+      await sleep(500);
     }
-    let papers = await Paper.find(filter).limit(10)
-    while (papers.length) {
-        // const restCount = await Paper.count(filter)
-        // console.log(`rest ${restCount} papers`)
-        for (let paper of papers) {
-            console.log(paper.rawtitle)
-            if (!paper.rawabstract) {
-                paper.deleted = true;
-                await paper.save()
-                continue
-            }
-            paper.title = await translate(paper.rawtitle)
-            const strippedAbstract = stripHtmlXmlTags(paper.rawabstract)
-            const abstracts = splitText(strippedAbstract)
-            paper.abstract = ''
-            for (let abstract of abstracts) {
-                await sleep(500)
-                paper.abstract += await translate(abstract)
-            }
-            await paper.save()
-            await sleep(500)
-        }
-        papers = await Paper.find(filter).limit(10)
-    }
+    papers = await Paper.find(filter).limit(10);
+  }
 }
-
-async function translateRawPaper() {
-    const filter = {
-        deleted: { $ne: true },
-        cnAbstract: { $exists: false },
-        "Abstract": { $exists: true },
-        platform: "wiley"
-    }
-    let papers = await RawPaper.find(filter).limit(10)
-    let existsCount = 0
-    console.log(papers.length)
-    while (papers.length) {
-        const restCount = await RawPaper.count(filter)
-        console.log(`rest ${restCount} papers`)
-        for (let paper of papers) {
-            const check = await Paper.findOne({ DOI: paper.DOI, title: { $exists: true } })
-            if (check && check.abstract) {
-                existsCount++
-                console.log(`exists ${existsCount} papers`)
-                paper.cnTitle = check.title
-                paper.cnAbstract = check.abstract
-                await paper.save()
-                continue
-            }
-            console.log(paper['Article Title'])
-            if (!paper.Abstract) {
-                paper.deleted = true;
-                await paper.save()
-                continue
-            }
-            paper.cnTitle = await translate(paper['Article Title'])
-            const abstracts = splitText(paper.Abstract)
-            paper.cnAbstract = ''
-            for (let abstract of abstracts) {
-                await sleep(500)
-                paper.cnAbstract += await translate(abstract)
-            }
-            await paper.save()
-            await sleep(500)
-        }
-        papers = await RawPaper.find(filter).limit(10)
-    }
-}
-
-async function translatePaperKeyword() {
-    const filter = {
-        deleted: { $ne: true },
-        cnAbstract: { $exists: true },
-        'Author Keywords': { $exists: true },
-        'cn Author Keywords': { $exists: false },
-    }
-    let papers = await RawPaper.find(filter).limit(10)
-    while (papers.length) {
-        const restCount = await RawPaper.count(filter)
-        console.log(`rest ${restCount} papers`)
-        for (let paper of papers) {
-            console.log(paper['Article Title'])
-            if (!paper.Abstract) {
-                paper.deleted = true;
-                await paper.save()
-                continue
-            }
-            paper['cn Author Keywords'] = await translate(paper['Author Keywords'])
-            if (paper['Keywords Plus']) {
-                paper['cn Keywords Plus'] = await translate(paper['Keywords Plus'])
-            }
-            await paper.save()
-            await sleep(500)
-        }
-        papers = await RawPaper.find(filter).limit(10)
-    }
-}
-
-
 
 function splitText(text) {
-    text.replace(/<[^>]*>/g, '')
-    const maxLen = 6000;
-    let rest = text.slice();
-    const result = []
-    while (rest.length > maxLen) {
-        const endIndex = rest.slice(0, maxLen).lastIndexOf('.')
-        result.push(rest.slice(0, endIndex))
-        rest = rest.slice(endIndex)
-    }
-    result.push(rest)
-    console.log(result.map(item => item.length))
-    return result
+  text.replace(/<[^>]*>/g, '');
+  const maxLen = 6000;
+  let rest = text.slice();
+  const result = [];
+  while (rest.length > maxLen) {
+    const endIndex = rest.slice(0, maxLen).lastIndexOf('.');
+    result.push(rest.slice(0, endIndex));
+    rest = rest.slice(endIndex);
+  }
+  result.push(rest);
+  console.log(result.map((item) => item.length));
+  return result;
 }
-translatePaper()
+translatePaper();
 
 // translatePaperKeyword()
 

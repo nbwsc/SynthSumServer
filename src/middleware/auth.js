@@ -11,12 +11,12 @@ module.exports = (app) => {
       return;
     }
 
-    const unAuthUrls = ['/account/login', '/app/getScreenshot'];
+    const unAuthUrls = ['/account/login'];
     if (unAuthUrls.includes(ctx.request.url.split('?')[0])) {
       await next();
     } else {
       const token = ctx.cookies.get('token') || ctx.request.header['x-token'];
-      const id = await redis.get(`FA:USER:${token}`);
+      const id = await redis.get(`SynthSum:USER:${token}`);
       if (!id) {
         return error.basicAuthError(ctx);
       }
